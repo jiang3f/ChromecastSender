@@ -532,14 +532,16 @@ namespace SslStreamTest
 		private static string destination_id = "receiver-0";
 
 		// t-mobile
-		//private static string chromecast_server = "10.0.19.83";
+		//private static string chromecast_server = "10.0.19.226";
+		//private static string chromecast_server = "10.0.19.219";
+
 		// home
-		private static string chromecast_server = "192.168.1.7";
+		private static string chromecast_server = "192.168.1.12";
 
 		// ssl test server
 		//private static string chromecast_server = "192.168.1.4";
 
-		//private static string chromecast_server = "10.0.7.130";
+		//private static string chromecast_server = "10.0.19.219";
 
 		//private static int msgCount = 0;
 
@@ -753,7 +755,6 @@ namespace SslStreamTest
 				CreateRequest(sslStream, data, transportId);
 				// end of test code
 				*/
-
 				// connect
 				data = "{\"type\":\"CONNECT\",\"origin\":{}}";
 				chrome_namespace = "urn:x-cast:com.google.cast.tp.connection";
@@ -763,6 +764,13 @@ namespace SslStreamTest
 				data = "{\"type\":\"GET_STATUS\",\"requestId\":46479000}";
 				chrome_namespace = "urn:x-cast:com.google.cast.receiver";
 				CreateRequest(sslStream, data);
+
+				/* Try the following test code when connectiing to my SSL test server 
+				data = "Hello from the client.<EOF>";
+				byte [] buffer = new byte[2048];
+				Encoding.ASCII.GetBytes(data, 0, data.Length, buffer, 0);
+				sslStream.Write(buffer, 0, data.Length);
+				*/
 
 				while (sessionId == null)
 				{
@@ -791,11 +799,11 @@ namespace SslStreamTest
 				CreateRequest(sslStream, data);
 
 				//launch
-				//data = "{\"type\":\"LAUNCH\",\"requestId\":46479001,\"appId\":\"CC1AD845\"}";
+				data = "{\"type\":\"LAUNCH\",\"requestId\":46479001,\"appId\":\"CC1AD845\"}";
 
 				// CACD78FE is my receiver
 
-				data = "{\"type\":\"LAUNCH\",\"requestId\":46479001,\"appId\":\"CACD78FE\"}";
+				//data = "{\"type\":\"LAUNCH\",\"requestId\":46479001,\"appId\":\"CACD78FE\"}";
 				chrome_namespace = "urn:x-cast:com.google.cast.receiver";
 				CreateRequest(sslStream, data);
 
@@ -836,19 +844,31 @@ namespace SslStreamTest
 				data = "{\"type\":\"LOAD\",\"requestId\":46479002,\"sessionId\":\"" + sessionId + "\",\"media\":{\"contentId\":\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\",\"streamType\":\"buffered\",\"contentType\":\"video/mp4\"},\"autoplay\":true,\"currentTime\":0,\"customData\":{\"payload\":{\"title:\":\"Big Buck Bunny\",\"thumb\":\"images/BigBuckBunny.jpg\"}}}";
 				//data = "{\"type\":\"LOAD\",\"requestId\":46479002,\"sessionId\":\"" + sessionId + "\",\"media\":{\"contentId\":\"http://localhost:5050/0\",\"streamType\":\"buffered\",\"contentType\":\"video/mp4\"},\"autoplay\":true,\"currentTime\":0,\"customData\":{\"payload\":{\"title:\":\"Big Buck Bunny\",\"thumb\":\"images/BigBuckBunny.jpg\"}}}";
 				//data = "{\"type\":\"LOAD\",\"autoplay\":true,\"currentTime\":0,\"activeTrackIds\":[],\"media\":{\"contentId\":\"http://192.168.1.4/ED_1280.mp4\",\"contentType\":\"video/mp4\",\"streamType\":\"BUFFERED\",\"metadata\":{\"filePath\":\"d:\\vantage_store\\ED_1280.mp4\",\"title\":\"ED_1280.mp4\"}},\"requestId\"::46479002}";
+				// home
 				//data = "{\"type\":\"LOAD\",\"requestId\":46479002,\"sessionId\":\"" + sessionId + "\",\"media\":{\"contentId\":\"http://192.168.1.4/sourcempeg2_422_pro_ntsc.mp4\",\"streamType\":\"buffered\",\"contentType\":\"video/mp4\"},\"autoplay\":true,\"currentTime\":0,\"customData\":{\"payload\":{\"title:\":\"Big Buck Bunny\",\"thumb\":\"images/BigBuckBunny.jpg\"}}}";
+				/// office
+				//data = "{\"type\":\"LOAD\",\"requestId\":46479002,\"sessionId\":\"" + sessionId + "\",\"media\":{\"contentId\":\"http://10.0.19.219/sourcempeg2_422_pro_ntsc.mp4\",\"streamType\":\"buffered\",\"contentType\":\"video/mp4\"},\"autoplay\":true,\"currentTime\":0,\"customData\":{\"payload\":{\"title:\":\"Big Buck Bunny\",\"thumb\":\"images/BigBuckBunny.jpg\"}}}";
 				chrome_namespace = "urn:x-cast:com.google.cast.media";
 				CreateRequest(sslStream, data, transportId);
 
-				while (true)
+				bool exitFlag = false;
+				while (!exitFlag)
 				{
 					if (ReadMessage(sslStream, ref response) == false) return;
 					Console.WriteLine("response: " + response);
+
+					if (response.Contains("idleReason"))
+					{
+						Console.WriteLine("Finished");
+						exitFlag = true;
+					}
 
 					// PING AGAIN
 					data = "{\"type\":\"PING\"}";
 					chrome_namespace = "urn:x-cast:com.google.cast.tp.heartbeat";
 					CreateRequest(sslStream, data);
+
+					System.Threading.Thread.Sleep(500);
 
 				}
 
